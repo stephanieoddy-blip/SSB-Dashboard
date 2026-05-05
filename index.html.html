@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 Specialty Steering Board Survey Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:        #C0544A;
+    --red-light:  #FDF0EE;
+    --red-mid:    #FADADB;
+    --green:      #1D9E75;
+    --green-light:#EAF3DE;
+    --amber:      #BA7517;
+    --amber-light:#FAEEDA;
+    --blue:       #185FA5;
+    --blue-light: #E6F1FB;
+    --purple:     #534AB7;
+    --purple-light:#EEEDFE;
+    --navy:       #1a2332;
+    --bg:         #f7f5f0;
+    --surface:    #ffffff;
+    --border:     rgba(0,0,0,0.07);
+    --text:       #1a1a1a;
+    --text-2:     #555;
+    --text-3:     #888;
+    --font-sans:  'DM Sans', sans-serif;
+    --font-serif: 'DM Serif Display', serif;
+    --radius:     10px;
+    --shadow:     0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  html { font-family: var(--font-sans); background: var(--bg); color: var(--text); font-size: 15px; }
+  body { min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--navy);
+    padding: 2rem 2.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .header-left h1 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    color: #fff;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin-bottom: 0.35rem;
+  }
+  .header-left p { color: rgba(255,255,255,0.55); font-size: 13px; }
+  .header-badge {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .hbadge {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    text-align: center;
+  }
+  .hbadge-val { font-size: 1.4rem; font-weight: 600; color: #fff; }
+  .hbadge-lbl { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+
+  /* METRIC STRIP */
+  .metric-strip {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .metric-item {
+    flex: 1;
+    min-width: 140px;
+    padding: 1rem 1.25rem;
+    border-right: 1px solid var(--border);
+  }
+  .metric-item:last-child { border-right: none; }
+  .mi-label { font-size: 11px; color: var(--text-3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .mi-value { font-size: 1.6rem; font-weight: 600; color: var(--text); line-height: 1; }
+  .mi-sub { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+  .mi-value.up { color: var(--green); }
+  .mi-value.warn { color: var(--amber); }
+
+  /* MAIN LAYOUT */
+  .layout { display: flex; min-height: calc(100vh - 130px); }
+
+  /* SIDEBAR NAV */
+  .sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.25rem 0;
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 130px);
+    overflow-y: auto;
+  }
+  .nav-section { padding: 0 1rem 0.5rem; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); font-weight: 600; margin-top: 1rem; }
+  .nav-section:first-child { margin-top: 0; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 1rem;
+    font-size: 13px;
+    color: var(--text-2);
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { color: var(--red); background: var(--red-light); border-left-color: var(--red); font-weight: 500; }
+  .nav-icon { font-size: 14px; flex-shrink: 0; }
+
+  /* CONTENT */
+  .content { flex: 1; padding: 1.75rem 2rem; overflow-x: hidden; min-width: 0; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-title { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 400; color: var(--text); margin-bottom: 0.4rem; }
+  .panel-sub { font-size: 13px; color: var(--text-3); margin-bottom: 1.5rem; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-bottom: 1rem; }
+
+  /* FILTER ROW */
+  .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .filter-row label { font-size: 13px; color: var(--text-3); }
+  select, input[type=text] {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border 0.15s;
+  }
+  select:focus, input[type=text]:focus { border-color: var(--red); }
+  input[type=text] { width: 100%; }
+
+  /* CHART WRAP */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 1rem; font-size: 12px; color: var(--text-3); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .lsw { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* SSB TABLE */
+  .ssb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ssb-table thead tr { background: var(--red); }
+  .ssb-table thead th { color: #fff; font-weight: 500; padding: 9px 12px; text-align: left; font-size: 12px; white-space: nowrap; }
+  .ssb-table thead th:not(:first-child) { text-align: center; }
+  .ssb-table tbody tr:nth-child(odd) { background: var(--red-light); }
+  .ssb-table tbody tr:nth-child(even) { background: var(--surface); }
+  .ssb-table tbody tr.overall-row { background: var(--red-mid); font-weight: 600; }
+  .ssb-table td { padding: 8px 12px; border-bottom: 1px solid rgba(192,84,74,0.08); color: var(--text); vertical-align: top; }
+  .ssb-table td:not(:first-child) { text-align: center; white-space: nowrap; }
+  .score-c { color: var(--blue); font-weight: 600; }
+  .diff-pos { color: var(--green); font-weight: 600; }
+  .diff-neg { color: var(--red); font-weight: 600; }
+  .diff-fl { color: var(--text-3); }
+
+  /* TREND TABLE */
+  .trend-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .trend-table th { text-align: left; padding: 8px 12px; font-weight: 600; font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .trend-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; }
+  .trend-table tr:last-child td { border-bottom: none; }
+  .trend-table tr:hover td { background: var(--bg); }
+  .chip { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .chip-up { background: var(--green-light); color: var(--green); }
+  .chip-dn { background: var(--red-light); color: var(--red); }
+  .chip-fl { background: var(--bg); color: var(--text-3); }
+
+  /* MOVERS */
+  .movers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .mover-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; border-left: 3px solid var(--green); }
+  .mover-card.dn { border-left-color: var(--red); }
+  .mover-rank { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+  .mover-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+  .mover-scores { font-size: 12px; color: var(--text-3); margin-bottom: 4px; }
+  .mover-diff { font-size: 1.1rem; font-weight: 700; }
+  .mover-diff.up { color: var(--green); }
+  .mover-diff.dn { color: var(--red); }
+
+  /* PERFECT */
+  .ten-chip { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; background: var(--amber-light); color: var(--amber); margin: 2px; }
+  .perfect-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .perfect-row:last-child { border-bottom: none; }
+  .perfect-spec { font-size: 13px; font-weight: 600; min-width: 180px; padding-top: 2px; }
+
+  /* THEMES */
+  .theme-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+  .theme-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
+  .theme-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .theme-count { font-size: 12px; color: var(--text-3); }
+  .theme-signal { font-size: 13px; color: var(--text-2); background: var(--bg); border-radius: 7px; padding: 0.6rem 1rem; margin-bottom: 0.75rem; line-height: 1.5; }
+  .theme-quotes { display: flex; flex-direction: column; gap: 8px; }
+  .tquote { border-left: 3px solid; padding: 0.6rem 0.75rem; border-radius: 0 6px 6px 0; }
+  .tquote p { font-size: 13px; font-style: italic; color: var(--text); line-height: 1.5; margin-bottom: 4px; }
+  .tquote cite { font-size: 11px; color: var(--text-3); }
+  .t-timing-c { border-left-color: var(--blue); background: var(--blue-light); }
+  .t-early-c { border-left-color: var(--purple); background: var(--purple-light); }
+  .t-adopt-c { border-left-color: var(--amber); background: var(--amber-light); }
+  .t-comp-c { border-left-color: var(--red); background: var(--red-light); }
+  .t-pos-c { border-left-color: var(--green); background: var(--green-light); }
+  .t-timing { background: var(--blue-light); color: var(--blue); }
+  .t-early { background: var(--purple-light); color: var(--purple); }
+  .t-adopt { background: var(--amber-light); color: var(--amber); }
+  .t-comp { background: var(--red-light); color: var(--red); }
+  .t-pos { background: var(--green-light); color: var(--green); }
+
+  /* HIGHLIGHTS */
+  .quotes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+  .quote-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; border-left: 3px solid var(--green); }
+  .quote-text { font-size: 13px; font-style: italic; color: var(--text); line-height: 1.6; margin-bottom: 8px; }
+  .quote-meta { display: flex; align-items: center; gap: 8px; }
+  .quote-spec { font-size: 12px; color: var(--text-3); }
+  .quote-score { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; background: var(--green-light); color: var(--green); }
+
+  /* ALL SPECIALTIES */
+  .spec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+  .spec-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; }
+  .spec-name { font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--text); line-height: 1.3; }
+  .sbar-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+  .sbar-lbl { font-size: 10px; color: var(--text-3); width: 22px; flex-shrink: 0; }
+  .sbar-bg { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+  .sbar-fill { height: 100%; border-radius: 2px; }
+  .sbar-val { font-size: 10px; color: var(--text-3); width: 26px; text-align: right; flex-shrink: 0; }
+
+  /* SEARCH */
+  .search-wrap { margin-bottom: 1.25rem; }
+
+  /* TABLE OVERFLOW */
+  .table-scroll { overflow-x: auto; }
+
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .header { padding: 1.25rem; }
+    .header-left h1 { font-size: 1.4rem; }
+    .content { padding: 1rem; }
+    .metric-strip { flex-wrap: wrap; }
+    .metric-item { min-width: 110px; }
+  }
+</style>
+
+<style media="print">
+  @page { size: A4 landscape; margin: 1.5cm; }
+  .sidebar { display: none !important; }
+  .header-badge { display: none; }
+  button[onclick="printToPDF()"] { display: none !important; }
+  .panel { display: block !important; page-break-after: always; }
+  .panel:last-child { page-break-after: auto; }
+  .layout { display: block; }
+  .content { padding: 0; }
+  .chart-wrap canvas { max-height: 400px; }
+  .metric-strip { flex-wrap: wrap; }
+  .quotes-grid { grid-template-columns: 1fr 1fr; }
+  .spec-grid { grid-template-columns: repeat(4, 1fr); }
+  .movers-grid { grid-template-columns: repeat(5, 1fr); }
+  body { font-size: 11px; }
+  .ssb-table td, .ssb-table th { padding: 5px 8px; font-size: 11px; }
+  .trend-table td, .trend-table th { padding: 5px 8px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Specialty Steering Board<br><em>Survey Results 2026</em></h1>
+    <p>Annual satisfaction survey · 278 respondents · 48 specialties</p>
+  </div>
+  <div class="header-badge">
+    <div class="hbadge">
+      <div class="hbadge-val">8.24</div>
+      <div class="hbadge-lbl">Overall avg</div>
+    </div>
+    <div class="hbadge">
+      <div class="hbadge-val">37.75</div>
+      <div class="hbadge-lbl">Overall NPS</div>
+    </div>
+    <div class="hbadge">
+      <div class="hbadge-val">13</div>
+      <div class="hbadge-lbl">Perfect 10s</div>
+    </div>
+  </div>
+</div>
+
+<div class="metric-strip">
+  <div class="metric-item">
+    <div class="mi-label">Overall avg 2026</div>
+    <div class="mi-value up">8.24</div>
+    <div class="mi-sub">↑ from 8.08 in 2025</div>
+  </div>
+  <div class="metric-item">
+    <div class="mi-label">Total responses</div>
+    <div class="mi-value">278</div>
+    <div class="mi-sub">Across 48 specialties</div>
+  </div>
+  <div class="metric-item">
+    <div class="mi-label">Q7 enjoyment (highest)</div>
+    <div class="mi-value up">9.08</div>
+    <div class="mi-sub">Highest-scoring question</div>
+  </div>
+  <div class="metric-item">
+    <div class="mi-label">Q6 adoption (lowest)</div>
+    <div class="mi-value warn">6.51</div>
+    <div class="mi-sub">Lowest-scoring question</div>
+  </div>
+  <div class="metric-item">
+    <div class="mi-label">Overall NPS 2026</div>
+    <div class="mi-value up">37.75</div>
+    <div class="mi-sub">↑ from 31.24 in 2025</div>
+  </div>
+  <div class="metric-item">
+    <div class="mi-label">Perfect 10/10</div>
+    <div class="mi-value">13</div>
+    <div class="mi-sub">Respondents, 10 specialties</div>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="nav-section">Analysis</div>
+    <div class="nav-item active" onclick="nav('overview',this)"><span class="nav-icon">▤</span> Overview</div>
+    <div class="nav-item" onclick="nav('questions',this)"><span class="nav-icon">◎</span> By question</div>
+    <div class="nav-item" onclick="nav('summary',this)"><span class="nav-icon">⊟</span> Summary table</div>
+    <div class="nav-section">Trends</div>
+    <div class="nav-item" onclick="nav('trends',this)"><span class="nav-icon">↗</span> Year-over-year</div>
+    <div class="nav-item" onclick="nav('movers',this)"><span class="nav-icon">⇅</span> Top movers</div>
+    <div class="nav-section">Insights</div>
+    <div class="nav-item" onclick="nav('perfect',this)"><span class="nav-icon">✦</span> 10/10 scorers</div>
+    <div class="nav-item" onclick="nav('themes',this)"><span class="nav-icon">◈</span> Themes</div>
+    <div class="nav-item" onclick="nav('highlights',this)"><span class="nav-icon">❝</span> Highlights</div>
+    <div class="nav-section">Detail</div>
+    <div class="nav-item" onclick="nav('specialties',this)"><span class="nav-icon">⊞</span> All specialties</div>
+  </nav>
+
+  <main class="content">
+
+    <!-- OVERVIEW -->
+    <div id="panel-overview" class="panel active">
+      <div class="panel-title">Overview</div>
+      <div class="panel-sub">Key scores across all specialties — Q1 features, Q2 roadmap, Q6 adoption, Q7 enjoyment, Q10 leads</div>
+      <div class="card">
+        <div class="legend">
+          <span><span class="lsw" style="background:#378ADD"></span>Q1 features</span>
+          <span><span class="lsw" style="background:#1D9E75"></span>Q2 roadmap</span>
+          <span><span class="lsw" style="background:#BA7517"></span>Q6 adoption</span>
+          <span><span class="lsw" style="background:#E24B4A"></span>Q7 enjoyment</span>
+          <span><span class="lsw" style="background:#534AB7"></span>Q10 leads</span>
+        </div>
+        <div class="filter-row">
+          <label>Sort by</label>
+          <select id="sortSel" onchange="renderOverview()">
+            <option value="0">Q1 features</option>
+            <option value="1">Q2 roadmap</option>
+            <option value="5">Q6 adoption</option>
+            <option value="6">Q7 enjoyment</option>
+            <option value="9">Q10 leads</option>
+            <option value="n">Response count</option>
+          </select>
+          <label>Min responses</label>
+          <select id="minN" onchange="renderOverview()">
+            <option value="1">1+</option>
+            <option value="3" selected>3+</option>
+            <option value="5">5+</option>
+            <option value="8">8+</option>
+          </select>
+        </div>
+        <div class="chart-wrap" id="ovWrap" style="height:540px">
+          <canvas id="ovChart" role="img" aria-label="Horizontal bar chart of SSB scores by specialty"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- BY QUESTION -->
+    <div id="panel-questions" class="panel">
+      <div class="panel-title">By question</div>
+      <div class="panel-sub">Single-question view across all specialties with 3+ responses</div>
+      <div class="card">
+        <div class="filter-row">
+          <label>Question</label>
+          <select id="qSel" onchange="renderQChart()">
+            <option value="0">Q1 — Epic provides necessary features/workflows/content</option>
+            <option value="1">Q2 — Roadmap reflects most important priorities</option>
+            <option value="2">Q3 — Sufficient opportunity for roadmap feedback</option>
+            <option value="3">Q4 — Board improves quality of features/workflows/content</option>
+            <option value="4">Q5 — Sufficient opportunity for project feedback</option>
+            <option value="5">Q6 — Org adopts board work in a timely manner</option>
+            <option value="6">Q7 — Enjoy participating on the board</option>
+            <option value="7">Q8 — Board uses time effectively</option>
+            <option value="8">Q9 — Epic values my role on the board</option>
+            <option value="9">Q10 — Epic leads support us well</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <span style="font-size:12px;color:var(--text-3)">Color: <span style="color:var(--green)">■</span> ≥8.0 &nbsp; <span style="color:var(--amber)">■</span> 6–7.9 &nbsp; <span style="color:var(--red)">■</span> &lt;6</span>
+        </div>
+        <div class="chart-wrap" id="qWrap" style="height:540px">
+          <canvas id="qChart" role="img" aria-label="Horizontal bar chart for selected question"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUMMARY TABLE -->
+    <div id="panel-summary" class="panel">
+      <div class="panel-title">Summary table</div>
+      <div class="panel-sub">Year-over-year per-question averages, styled after the existing SSB reporting format</div>
+      <div class="card">
+        <div class="filter-row">
+          <label>Specialty</label>
+          <select id="sumSel" onchange="renderSummary()"></select>
+        </div>
+        <div class="table-scroll" id="sumWrap"></div>
+      </div>
+    </div>
+
+    <!-- TRENDS -->
+    <div id="panel-trends" class="panel">
+      <div class="panel-title">Year-over-year trends</div>
+      <div class="panel-sub">Overall specialty score across 2024, 2025, and 2026</div>
+      <div class="card">
+        <div class="search-wrap">
+          <input type="text" id="trendQ" placeholder="Filter specialties…" oninput="renderTrends()">
+        </div>
+        <div class="table-scroll">
+          <table class="trend-table">
+            <thead><tr><th>Specialty</th><th>2024</th><th>2025</th><th>2026</th><th>1Y diff '25→'26</th><th>2Y diff '24→'26</th><th>n (2026)</th></tr></thead>
+            <tbody id="trendBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOVERS -->
+    <div id="panel-movers" class="panel">
+      <div class="panel-title">Top movers</div>
+      <div class="panel-sub">Specialties with the largest score changes from 2024 to 2026 (min 3 responses in 2026)</div>
+      <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.05em;font-size:11px;">Top 5 most improved</div>
+      <div class="movers-grid" id="improvers"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:0.6rem;margin-top:0.5rem;text-transform:uppercase;letter-spacing:0.05em;font-size:11px;">Top 5 largest declines</div>
+      <div class="movers-grid" id="decliners"></div>
+    </div>
+
+    <!-- PERFECT -->
+    <div id="panel-perfect" class="panel">
+      <div class="panel-title">10/10 scorers</div>
+      <div class="panel-sub">13 respondents gave perfect 10s across all questions. Specialties with at least one perfect-score respondent:</div>
+      <div class="card">
+        <div class="chart-wrap" id="perfWrap" style="height:220px">
+          <canvas id="perfChart" role="img" aria-label="Bar chart of perfect 10 respondents by specialty"></canvas>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <div class="card-title">Specialties averaging 10.0 on at least one question</div>
+        <div id="perfectAvgs"></div>
+      </div>
+    </div>
+
+    <!-- THEMES -->
+    <div id="panel-themes" class="panel">
+      <div class="panel-title">Common themes</div>
+      <div class="panel-sub">Key patterns from free-response comments, backed by quantitative data signals and direct quotes</div>
+
+      <div class="theme-block">
+        <div class="theme-header">
+          <span class="theme-badge t-timing">Meeting timing</span>
+          <span class="theme-count">14 comments across 11 specialties</span>
+        </div>
+        <div class="theme-signal">📊 Q7 enjoyment avg 9.08 despite widespread scheduling friction — engagement remains high even when attendance is difficult. Boards with timing complaints still score Q7 at 8–9+.</div>
+        <div class="theme-quotes">
+          <div class="tquote t-timing-c"><p>"The scheduling of the meetings for our group is challenging for active clinicians: 4pm on alternating Mondays and Tuesdays. In order to adequately participate I have to clear my schedule of patients or run in and out of the meeting."</p><cite>— Obstetrics</cite></div>
+          <div class="tquote t-timing-c"><p>"I wish the time of the meetings was more friendly for west coast, it is during school drop off and I am not able to attend most meetings!"</p><cite>— Critical Care Medicine</cite></div>
+          <div class="tquote t-timing-c"><p>"Rotating meeting times make it impossible for me to join the meetings. Need a standard meeting time so I can arrange my schedule with some predictability."</p><cite>— Pediatric Urology</cite></div>
+        </div>
+      </div>
+
+      <div class="theme-block">
+        <div class="theme-header">
+          <span class="theme-badge t-early">Earlier roadmap input</span>
+          <span class="theme-count">11 comments across 8 specialties</span>
+        </div>
+        <div class="theme-signal">📊 Q2 (roadmap priorities) avg 7.74 — lowest-scoring product question. Q3/Q5 (feedback opportunities) are notably higher at 8.37/8.41, suggesting the gap is about <em>when</em> input is sought, not whether it's welcomed.</div>
+        <div class="theme-quotes">
+          <div class="tquote t-early-c"><p>"Projects come to us too late, do not have a full understanding of the issues facing radiologists and technologists, and are not typically changed before being released."</p><cite>— Diagnostic Radiology</cite></div>
+          <div class="tquote t-early-c"><p>"Having a forum to review early concepts, share ICU-specific use cases, and provide clinical input before features are finalized would help ensure these tools are safe and clinically relevant."</p><cite>— Critical Care Medicine</cite></div>
+          <div class="tquote t-early-c"><p>"There remains a downstream design approach in which Epic builds first and the steering board offers recommendations afterward, when in reality end users should be involved much earlier in the design process."</p><cite>— Pediatric Endocrinology</cite></div>
+        </div>
+      </div>
+
+      <div class="theme-block">
+        <div class="theme-header">
+          <span class="theme-badge t-adopt">Org adoption gap</span>
+          <span class="theme-count">18 comments across 14 specialties</span>
+        </div>
+        <div class="theme-signal">📊 Q6 avg 6.51 — lowest-scoring question by a wide margin, 1.57 points below the next-lowest (Q2 at 7.74). Consistent across all three years: 6.39 (2024) → 6.24 (2025) → 6.51 (2026). Respondents frequently note this reflects institutional constraints, not the board's work.</div>
+        <div class="theme-quotes">
+          <div class="tquote t-adopt-c"><p>"I see so many opportunities for improvement presented and none of them are available in my institution so it feels like the theoretical 'possible' and daily reality are pretty far apart."</p><cite>— Critical Care Medicine</cite></div>
+          <div class="tquote t-adopt-c"><p>"The variability in Epic version status across organizations often prevents the real-time use of tools we help develop."</p><cite>— Pediatric Cardiology</cite></div>
+          <div class="tquote t-adopt-c"><p>"We are on year 3 of trying to implement the retrospective ICU mortality prediction model and never have been able to get the new rounding checklist implemented."</p><cite>— Critical Care Medicine</cite></div>
+        </div>
+      </div>
+
+      <div class="theme-block">
+        <div class="theme-header">
+          <span class="theme-badge t-comp">Compensation for board service</span>
+          <span class="theme-count">5 comments across 5 specialties</span>
+        </div>
+        <div class="theme-signal">📊 Raised by respondents with avg scores ranging 6.5–8.7 — not correlated with dissatisfaction, but with high engagement and perceived value. Board members generating meaningful product input are raising this as a sustainability concern.</div>
+        <div class="theme-quotes">
+          <div class="tquote t-comp-c"><p>"If you provided FTE to the Board members, we could regularly give you an hour weekly for developers. Epic will get what it pays for — right now, Epic is using physician volunteers — it's hamstringing Epic's ability to build faster and better."</p><cite>— Oncology</cite></div>
+          <div class="tquote t-comp-c"><p>"It is standard for advisory board participation to be compensated. I believe Epic should compensate board members for their significant time and effort. We are generating significant value."</p><cite>— Ophthalmology</cite></div>
+          <div class="tquote t-comp-c"><p>"Board service is highly valuable! It would be nice if Epic considered some kind of compensation or honorarium for the time and energy given."</p><cite>— Gynecology</cite></div>
+        </div>
+      </div>
+
+      <div class="theme-block">
+        <div class="theme-header">
+          <span class="theme-badge t-pos">Epic leads praised</span>
+          <span class="theme-count">22+ positive mentions across specialties</span>
+        </div>
+        <div class="theme-signal">📊 Q10 (leads support) avg 9.00 — tied for highest question score alongside Q7 (enjoyment). Named Epic leads received specific recognition in at least 12 specialties. Strongest positive predictor of overall satisfaction.</div>
+        <div class="theme-quotes">
+          <div class="tquote t-pos-c"><p>"Lee is amazing and runs the meetings fast and efficiently. He asks all kinds of insightful questions and really listens."</p><cite>— Rheumatology (avg 10.0)</cite></div>
+          <div class="tquote t-pos-c"><p>"John, Dave, and their Epic team create an atmosphere for success and collegiality with the board. They advocate for the board and ensure employees who present keep track of the impact of our feedback."</p><cite>— Hospital Medicine</cite></div>
+          <div class="tquote t-pos-c"><p>"I cannot overstate how wonderful it is to work with Cat and Jason."</p><cite>— Ophthalmology</cite></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HIGHLIGHTS -->
+    <div id="panel-highlights" class="panel">
+      <div class="panel-title">Positive highlights</div>
+      <div class="panel-sub">Selected comments from respondents scoring 9.0+ average across all questions</div>
+      <div class="quotes-grid" id="quotesGrid"></div>
+    </div>
+
+    <!-- ALL SPECIALTIES -->
+    <div id="panel-specialties" class="panel">
+      <div class="panel-title">All specialties</div>
+      <div class="panel-sub">Per-question breakdown for every specialty with 3+ responses. Color: green ≥8, amber 6–7.9, red &lt;6.</div>
+      <div class="search-wrap">
+        <input type="text" id="specQ" placeholder="Filter specialties…" oninput="renderSpecialties()">
+      </div>
+      <div class="spec-grid" id="specGrid"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ── DATA ─────────────────────────────────────────────────────────── */
+const pivoted = [
+  {s:"Anesthesiology",n:13,a:[8,8.25,8.23,8.23,8.15,6.46,9.15,8.62,8.77,8.69]},
+  {s:"Bariatric Surgery and Obesity Medicine",n:8,a:[5.5,6,6.5,6.88,6,5,7.5,7.13,7.75,7.38]},
+  {s:"Behavioral Health",n:9,a:[7,7.78,8.33,8.89,8.44,6.33,9.78,9.44,8.56,9.33]},
+  {s:"Cardiology",n:10,a:[8.7,8.4,8.8,8.9,8.9,8.1,9.5,9.3,9.5,9.7]},
+  {s:"Critical Care Medicine",n:13,a:[7.46,7.46,7.54,7.15,7.77,5.31,8.46,7.62,7.69,8.23]},
+  {s:"Dentistry",n:3,a:[8,8.33,9.33,9.33,8.67,6.67,10,10,10,10]},
+  {s:"Dermatology",n:7,a:[7.43,7.43,8.43,8.71,8.86,6.33,9,9,8.57,8.57]},
+  {s:"Diagnostic Radiology",n:10,a:[7.7,7.8,8.6,8.5,8.7,6.8,9.4,9.4,9.1,9.2]},
+  {s:"Emergency Medicine",n:1,a:[10,10,10,10,10,10,10,10,10,10]},
+  {s:"Endocrinology",n:7,a:[7.71,8,8.57,8.71,8.71,6.43,8.86,8.43,8.57,8.43]},
+  {s:"Family Medicine",n:9,a:[7.78,7.11,8.22,8.56,8.22,7.33,9.22,9,8.11,9.11]},
+  {s:"Fertility",n:2,a:[6.5,7.5,7.5,8,8,6,8.5,8,9,9]},
+  {s:"Gastroenterology",n:1,a:[6,7,8,8,8,5,10,7,10,10]},
+  {s:"General Surgery",n:1,a:[9,10,10,10,10,5,10,10,10,9]},
+  {s:"Genetics",n:5,a:[8,8.6,8.8,9.4,8.4,6.4,9.8,9.8,9.6,9.8]},
+  {s:"Geriatric Medicine",n:1,a:[7,9,10,8,10,7,8,8,8,8]},
+  {s:"Gynecology",n:8,a:[8.38,8.75,9,9.25,9.13,6.63,9.38,9.38,9.25,9.25]},
+  {s:"Hepatology",n:1,a:[9,10,10,10,10,7,10,10,10,10]},
+  {s:"Hospital Medicine",n:8,a:[9,9.13,9.5,9.5,9.63,8,9.75,9.75,9.88,9.88]},
+  {s:"Infectious Disease",n:3,a:[5.33,7,7.67,6.67,7.67,4.33,8.33,7.67,8.33,8.33]},
+  {s:"Neonatology",n:4,a:[6.75,7.75,8.75,9.5,9.25,7.25,10,9.75,9.5,10]},
+  {s:"Nephrology",n:8,a:[8.13,8.38,8.75,8.75,8.88,7.25,9.88,9,9,9.57]},
+  {s:"Neurology",n:1,a:[8,9,9,9,9,7,10,10,10,10]},
+  {s:"Obstetrics",n:8,a:[7.13,7,7.5,7.75,7.75,5.75,9.13,8.5,8.75,9]},
+  {s:"Occupational Medicine",n:2,a:[7.5,8,8.5,9,9,6,10,9.5,9.5,9.5]},
+  {s:"Oncology",n:7,a:[6.71,7.14,6.71,7.71,7.14,5.83,7.86,7.86,7.57,7.67]},
+  {s:"Ophthalmology",n:4,a:[8.25,8.25,9.5,9.75,9.75,5.5,9.67,10,7.5,10]},
+  {s:"Orthopaedic Surgery",n:10,a:[7.9,7.5,8.3,8.7,8.6,6.4,8.9,8.7,7.9,9.4]},
+  {s:"Pathology",n:11,a:[7.27,7.09,8.18,8.27,7.45,6.91,9.27,9.09,9.09,9.27]},
+  {s:"Pediatric Cardiology",n:10,a:[6.4,6.8,7.7,7.2,7.9,5.6,8.6,8.1,8.7,9.1]},
+  {s:"Pediatric Emergency Medicine",n:2,a:[10,10,10,10,10,10,10,10,10,10]},
+  {s:"Pediatric Endocrinology",n:6,a:[7.33,7.67,8.5,8.83,8.5,6.5,8.83,8.5,8.5,8.83]},
+  {s:"Pediatric Gastroenterology",n:4,a:[6.5,6.75,7.75,8.25,8,6,8.5,7.75,7.75,7.75]},
+  {s:"Pediatric Hospital Medicine",n:4,a:[6.5,8,8,8.75,8,5.75,10,9.25,9.75,10]},
+  {s:"Pediatric Nephrology",n:8,a:[7.5,8.25,8.5,8.5,8.63,6.5,9,8.75,8.88,9.25]},
+  {s:"Pediatric Neurology",n:6,a:[8.17,8.83,9.17,9.33,9.17,7.17,9.5,9.5,9.33,9.67]},
+  {s:"Pediatric Oncology",n:5,a:[7.6,7.2,8,8.8,8,7,9,8.6,7.6,8.2]},
+  {s:"Pediatric Otolaryngology",n:2,a:[7.5,8,9,8.5,8.5,7.5,8.5,9,9,9.5]},
+  {s:"Pediatric Primary Care",n:7,a:[7.86,9,8.86,9.14,9,8,9.43,8.86,9,9.14]},
+  {s:"Pediatric Pulmonology",n:6,a:[7,7.17,7.5,7.83,7.33,6.5,7.33,7.17,7,7.5]},
+  {s:"Pediatric Rheumatology",n:3,a:[7.67,7.67,8.67,9,8.33,8.67,10,10,9.67,10]},
+  {s:"Pediatric Urology",n:2,a:[6.5,6,6.5,7.5,8,3.5,8,7,6.5,8.5]},
+  {s:"Physical Medicine and Rehab",n:9,a:[5.22,7.22,7.33,7.56,7.44,5.44,8.22,7.44,7.56,8]},
+  {s:"Pulmonology",n:1,a:[8,10,10,9,9,4,10,10,10,10]},
+  {s:"Radiation Oncology",n:11,a:[6.73,7.36,7.82,8.18,7.91,6.36,9.36,8.91,9,9.55]},
+  {s:"Rehabilitation",n:5,a:[6,7.6,7.6,8.2,7.8,5.8,9.6,8.4,8.6,8.4]},
+  {s:"Rheumatology",n:11,a:[7.27,7.82,8.36,8.64,8.45,7.73,9.18,9.09,9.27,9.45]},
+  {s:"Trauma Surgery",n:1,a:[2,2,6,7,7,4,7,5,5,5]},
+];
+
+const trendRows = [
+  {s:"Anesthesiology",y24:8.85,y25:8.17,y26:8.26,n:13},
+  {s:"Bariatric Surgery and Obesity Medicine",y24:8.02,y25:7.18,y26:6.56,n:8},
+  {s:"Behavioral Health",y24:8.08,y25:8.37,y26:8.39,n:9},
+  {s:"Cardiology",y24:9.13,y25:8.53,y26:8.98,n:10},
+  {s:"Critical Care Medicine",y24:7.72,y25:8.42,y26:7.47,n:13},
+  {s:"Dentistry",y24:9.10,y25:8.85,y26:9.03,n:3},
+  {s:"Dermatology",y24:8.33,y25:8.90,y26:8.13,n:7},
+  {s:"Diagnostic Radiology",y24:8.26,y25:7.65,y26:8.43,n:10},
+  {s:"Emergency Medicine",y24:8.94,y25:8.70,y26:10,n:1},
+  {s:"Endocrinology",y24:6.90,y25:8.32,y26:8.20,n:7},
+  {s:"Family Medicine",y24:9.13,y25:8.29,y26:8.30,n:9},
+  {s:"Fertility",y24:6.45,y25:8.00,y26:7.80,n:2},
+  {s:"Gastroenterology",y24:7.50,y25:8.00,y26:7.90,n:1},
+  {s:"General Surgery",y24:9.05,y25:8.50,y26:9.30,n:1},
+  {s:"Genetics",y24:8.27,y25:7.98,y26:8.92,n:5},
+  {s:"Gynecology",y24:8.00,y25:7.93,y26:8.89,n:8},
+  {s:"Hepatology",y24:8.10,y25:8.88,y26:9.60,n:1},
+  {s:"Hospital Medicine",y24:8.21,y25:8.13,y26:9.38,n:8},
+  {s:"Infectious Disease",y24:6.26,y25:5.64,y26:7.13,n:3},
+  {s:"Neonatology",y24:8.73,y25:8.65,y26:8.88,n:4},
+  {s:"Nephrology",y24:9.15,y25:8.25,y26:8.75,n:8},
+  {s:"Neurology",y24:8.27,y25:8.73,y26:9.10,n:1},
+  {s:"Obstetrics",y24:7.72,y25:7.34,y26:7.88,n:8},
+  {s:"Occupational Medicine",y24:6.94,y25:8.00,y26:8.65,n:2},
+  {s:"Oncology",y24:8.20,y25:6.98,y26:7.31,n:7},
+  {s:"Ophthalmology",y24:8.83,y25:8.82,y26:8.76,n:4},
+  {s:"Orthopaedic Surgery",y24:7.05,y25:8.26,y26:8.17,n:10},
+  {s:"Pathology",y24:9.46,y25:7.54,y26:8.28,n:11},
+  {s:"Pediatric Cardiology",y24:7.26,y25:7.35,y26:7.71,n:10},
+  {s:"Pediatric Emergency Medicine",y24:9.35,y25:8.89,y26:10,n:2},
+  {s:"Pediatric Endocrinology",y24:8.08,y25:7.80,y26:8.18,n:6},
+  {s:"Pediatric Gastroenterology",y24:6.98,y25:7.88,y26:7.63,n:4},
+  {s:"Pediatric Nephrology",y24:7.96,y25:8.63,y26:8.38,n:8},
+  {s:"Pediatric Neurology",y24:8.10,y25:8.95,y26:8.95,n:6},
+  {s:"Pediatric Oncology",y24:7.82,y25:8.50,y26:7.66,n:5},
+  {s:"Pediatric Otolaryngology",y24:8.18,y25:6.52,y26:8.50,n:2},
+  {s:"Pediatric Primary Care",y24:9.10,y25:8.35,y26:8.91,n:7},
+  {s:"Pediatric Pulmonology",y24:9.07,y25:8.10,y26:7.17,n:6},
+  {s:"Pediatric Rheumatology",y24:8.17,y25:7.95,y26:9.00,n:3},
+  {s:"Pediatric Urology",y24:8.08,y25:7.35,y26:6.90,n:2},
+  {s:"Physical Medicine and Rehab",y24:null,y25:7.23,y26:7.29,n:9},
+  {s:"Radiation Oncology",y24:7.83,y25:8.46,y26:8.53,n:11},
+  {s:"Rehabilitation",y24:8.65,y25:8.63,y26:7.80,n:5},
+  {s:"Rheumatology",y24:8.63,y25:9.00,y26:8.64,n:11},
+  {s:"Trauma Surgery",y24:7.88,y25:6.90,y26:5.00,n:1},
+];
+
+const overallQData = [
+  {qid:"Q1",label:"Epic provides the necessary features, workflows, and content for my specialty.",y24:7.21,y25:7.28,y26:7.37},
+  {qid:"Q2",label:"The roadmap my Epic leads share reflects the most important priorities for my specialty.",y24:7.65,y25:7.54,y26:7.74},
+  {qid:"Q3",label:"The board has sufficient opportunity to provide feedback on my specialty's roadmap.",y24:8.26,y25:8.08,y26:8.37},
+  {qid:"Q4",label:"The board improves the quality of features, workflows, and content for users in my specialty.",y24:8.14,y25:8.15,y26:8.42},
+  {qid:"Q5",label:"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.",y24:8.41,y25:8.27,y26:8.41},
+  {qid:"Q6",label:"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.",y24:6.39,y25:6.24,y26:6.51},
+  {qid:"Q7",label:"I enjoy participating on the board.",y24:9.09,y25:9.11,y26:9.08},
+  {qid:"Q8",label:"The board effectively makes use of my time.",y24:8.68,y25:8.64,y26:8.77},
+  {qid:"Q9",label:"Epic values my role on the board.",y24:8.54,y25:8.58,y26:8.67},
+  {qid:"Q10",label:"Epic leads for the board support us well.",y24:9.00,y25:8.94,y26:9.00},
+];
+
+const summarySpecData = {
+"OVERALL (all specialties)": overallQData,
+  "Anesthesiology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.65,"y25":8.09,"y26":8.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.59,"y25":8.05,"y26":8.25},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.53,"y25":7.91,"y26":8.23},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.06,"y25":8.77,"y26":8.23},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.76,"y25":8.45,"y26":8.15},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":7.0,"y25":6.55,"y26":6.46},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.82,"y25":8.91,"y26":9.15},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.24,"y25":8.41,"y26":8.62},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.12,"y25":8.32,"y26":8.77},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.76,"y25":8.27,"y26":8.69}],
+  "Bariatric Surgery and Obesity Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.4,"y25":6.75,"y26":5.5},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.6,"y25":5.5,"y26":6.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.6,"y25":7.25,"y26":6.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.4,"y25":7.0,"y26":6.88},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.8,"y25":7.25,"y26":6.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":7.0,"y25":5.75,"y26":5.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.2,"y25":8.0,"y26":7.5},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.0,"y25":7.25,"y26":7.13},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.4,"y25":8.25,"y26":7.75},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.8,"y25":8.75,"y26":7.38}],
+  "Behavioral Health": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":6.83,"y25":6.33,"y26":7.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.33,"y25":7.17,"y26":7.78},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.5,"y25":8.67,"y26":8.33},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.0,"y25":8.5,"y26":8.89},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.0,"y25":8.83,"y26":8.44},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":4.83,"y25":5.83,"y26":6.33},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.5,"y25":9.83,"y26":9.78},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.33,"y25":9.5,"y26":9.44},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.17,"y25":9.33,"y26":8.56},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.33,"y25":9.67,"y26":9.33}],
+  "Cardiology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.67,"y25":8.25,"y26":8.7},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.67,"y25":8.13,"y26":8.4},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.83,"y25":8.38,"y26":8.8},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.83,"y25":8.75,"y26":8.9},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.17,"y25":8.88,"y26":8.9},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":8.5,"y25":6.25,"y26":8.1},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.83,"y25":9.5,"y26":9.5},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.67,"y25":8.75,"y26":9.3},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.5,"y25":9.13,"y26":9.5},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.67,"y25":9.25,"y26":9.7}],
+  "Critical Care Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.2,"y25":8.0,"y26":7.46},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.2,"y25":8.17,"y26":7.46},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.6,"y25":8.33,"y26":7.54},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.8,"y25":8.17,"y26":7.15},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.0,"y25":8.5,"y26":7.77},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.6,"y25":7.17,"y26":5.31},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.4,"y25":9.83,"y26":8.46},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.0,"y25":9.5,"y26":7.62},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.8,"y25":7.5,"y26":7.69},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":7.6,"y25":9.0,"y26":8.23}],
+  "Dentistry": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.88,"y25":7.67,"y26":8.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.38,"y25":7.67,"y26":8.33},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.5,"y25":8.67,"y26":9.67},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.25,"y25":8.67,"y26":9.33},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.5,"y25":8.83,"y26":9.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":7.88,"y25":7.5,"y26":6.67},{"qid":"Q7","label":"I enjoy participating on the board.","y24":10.0,"y25":9.83,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.75,"y25":9.67,"y26":10.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.25,"y25":10.0,"y26":9.33},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.63,"y25":10.0,"y26":10.0}],
+  "Dermatology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.0,"y25":7.67,"y26":7.43},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.33,"y25":8.67,"y26":7.43},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.0,"y25":9.0,"y26":8.14},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.33,"y25":9.67,"y26":8.57},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.67,"y25":8.67,"y26":8.57},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":3.0,"y25":7.0,"y26":6.33},{"qid":"Q7","label":"I enjoy participating on the board.","y24":10.0,"y25":9.67,"y26":9.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.0,"y25":9.33,"y26":8.43},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.33,"y25":9.33,"y26":8.57},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.67,"y25":10.0,"y26":8.57}],
+  "Diagnostic Radiology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.14,"y25":7.33,"y26":7.7},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.86,"y25":7.33,"y26":7.8},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.0,"y25":7.33,"y26":8.4},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.71,"y25":8.17,"y26":8.3},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.43,"y25":7.17,"y26":8.3},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.43,"y25":6.17,"y26":6.8},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.29,"y25":8.5,"y26":9.4},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.29,"y25":8.5,"y26":9.3},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.43,"y25":7.83,"y26":9.1},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.0,"y25":8.17,"y26":9.2}],
+  "Emergency Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.4,"y25":7.33,"y26":10.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.0,"y25":7.33,"y26":10.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.6,"y25":9.0,"y26":10.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.4,"y25":9.33,"y26":10.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.8,"y25":9.33,"y26":10.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":8.0,"y25":5.33,"y26":10.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.8,"y25":10.0,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.2,"y25":10.0,"y26":10.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.4,"y25":9.33,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.8,"y25":10.0,"y26":10.0}],
+  "Endocrinology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":5.75,"y25":7.8,"y26":7.71},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":6.75,"y25":8.0,"y26":8.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.75,"y25":8.8,"y26":8.57},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.0,"y25":8.4,"y26":8.86},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.25,"y25":8.8,"y26":8.71},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.5,"y25":6.8,"y26":6.43},{"qid":"Q7","label":"I enjoy participating on the board.","y24":7.75,"y25":8.8,"y26":8.86},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":7.5,"y25":8.4,"y26":8.14},{"qid":"Q9","label":"Epic values my role on the board.","y24":6.25,"y25":8.8,"y26":8.29},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":7.5,"y25":8.6,"y26":8.43}],
+  "Family Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.33,"y25":7.63,"y26":7.78},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.33,"y25":7.63,"y26":7.11},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.67,"y25":8.0,"y26":8.33},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.33,"y25":8.5,"y26":8.44},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.33,"y25":7.88,"y26":8.11},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":8.67,"y25":7.25,"y26":7.33},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.67,"y25":9.25,"y26":9.22},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.67,"y25":9.13,"y26":9.11},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.67,"y25":9.0,"y26":8.44},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.67,"y25":8.63,"y26":9.11}],
+  "Fertility": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":4.67,"y25":8.0,"y26":6.5},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":6.0,"y25":8.33,"y26":7.5},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.17,"y25":8.67,"y26":7.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.33,"y25":9.0,"y26":8.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.33,"y25":8.33,"y26":8.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":4.83,"y25":5.0,"y26":6.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":7.5,"y25":8.33,"y26":8.5},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":6.67,"y25":8.33,"y26":8.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":6.0,"y25":7.0,"y26":9.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":7.0,"y25":9.0,"y26":9.0}],
+  "Gastroenterology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.0,"y25":7.0,"y26":6.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":6.6,"y25":8.33,"y26":7.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.2,"y25":7.0,"y26":8.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.0,"y25":7.0,"y26":8.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.6,"y25":7.67,"y26":8.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.4,"y25":6.33,"y26":5.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.6,"y25":10.0,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":7.8,"y25":8.67,"y26":7.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.6,"y25":8.0,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.2,"y25":10.0,"y26":10.0}],
+  "General Surgery": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":9.0,"y25":7.67,"y26":9.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.0,"y25":7.67,"y26":10.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.5,"y25":8.33,"y26":10.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.0,"y25":8.67,"y26":10.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.5,"y25":8.33,"y26":10.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":9.0,"y25":6.67,"y26":5.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":10.0,"y25":9.67,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":10.0,"y25":9.67,"y26":10.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.0,"y25":9.17,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.5,"y25":9.17,"y26":9.0}],
+  "Genetics": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.83,"y25":7.75,"y26":8.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.67,"y25":7.25,"y26":8.6},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.0,"y25":8.0,"y26":9.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.83,"y25":8.75,"y26":9.4},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.17,"y25":8.25,"y26":8.6},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":4.33,"y25":5.0,"y26":6.4},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.67,"y25":8.75,"y26":9.8},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.67,"y25":8.75,"y26":9.8},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.0,"y25":8.5,"y26":9.8},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.5,"y25":8.75,"y26":9.8}],
+  "Geriatric Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.0,"y25":7.0,"y26":7.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.6,"y25":8.8,"y26":9.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.8,"y25":8.8,"y26":10.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.8,"y25":8.4,"y26":8.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.4,"y25":8.6,"y26":10.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.0,"y25":5.0,"y26":7.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.8,"y25":9.4,"y26":8.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.6,"y25":8.8,"y26":8.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.6,"y25":9.0,"y26":8.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.8,"y25":9.2,"y26":8.0}],
+  "Gynecology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.2,"y25":7.5,"y26":8.38},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.2,"y25":8.0,"y26":8.75},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.0,"y25":8.0,"y26":9.25},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.0,"y25":8.25,"y26":9.38},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.8,"y25":8.25,"y26":9.29},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.8,"y25":4.25,"y26":6.63},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.6,"y25":9.25,"y26":9.38},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":7.8,"y25":8.25,"y26":9.38},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.0,"y25":8.5,"y26":9.25},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":7.6,"y25":9.0,"y26":9.25}],
+  "Hepatology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.0,"y25":8.25,"y26":9.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.0,"y25":9.0,"y26":10.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.33,"y25":9.25,"y26":10.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.33,"y25":8.5,"y26":10.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.0,"y25":8.5,"y26":10.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.0,"y25":7.5,"y26":7.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.67,"y25":9.5,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.0,"y25":9.25,"y26":10.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.67,"y25":9.5,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.0,"y25":9.5,"y26":10.0}],
+  "Hospital Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.86,"y25":8.29,"y26":9.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.86,"y25":7.14,"y26":9.13},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.86,"y25":7.29,"y26":9.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.71,"y25":7.57,"y26":9.38},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.29,"y25":8.29,"y26":9.38},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":7.71,"y25":6.29,"y26":8.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.86,"y25":9.29,"y26":9.75},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.43,"y25":8.14,"y26":9.88},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.57,"y25":9.0,"y26":9.88},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.0,"y25":10.0,"y26":9.88}],
+  "Infectious Disease": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":4.43,"y25":4.6,"y26":5.33},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":4.86,"y25":4.3,"y26":7.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":6.14,"y25":5.7,"y26":7.67},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":6.14,"y25":5.2,"y26":6.67},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":6.29,"y25":5.6,"y26":7.67},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":4.57,"y25":4.2,"y26":4.33},{"qid":"Q7","label":"I enjoy participating on the board.","y24":7.71,"y25":7.8,"y26":8.33},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":7.29,"y25":5.8,"y26":7.67},{"qid":"Q9","label":"Epic values my role on the board.","y24":6.86,"y25":6.7,"y26":8.33},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.29,"y25":6.5,"y26":8.33}],
+  "Neonatology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":6.7,"y25":5.88,"y26":6.75},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.9,"y25":7.75,"y26":7.75},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.5,"y25":8.5,"y26":8.75},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.6,"y25":8.5,"y26":9.5},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.8,"y25":9.25,"y26":9.25},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":8.3,"y25":7.75,"y26":7.25},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.7,"y25":9.63,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.6,"y25":9.63,"y26":9.75},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.6,"y25":9.88,"y26":9.75},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.6,"y25":9.75,"y26":10.0}],
+  "Nephrology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.0,"y25":7.75,"y26":8.13},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":9.5,"y25":7.75,"y26":8.38},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.5,"y25":8.0,"y26":8.75},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.5,"y25":8.0,"y26":8.63},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.5,"y25":7.5,"y26":8.63},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":8.0,"y25":7.0,"y26":7.25},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.5,"y25":10.0,"y26":9.88},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.5,"y25":9.75,"y26":9.25},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.5,"y25":8.25,"y26":9.13},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.0,"y25":8.5,"y26":9.57}],
+  "Neurology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.0,"y25":8.33,"y26":8.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.43,"y25":8.67,"y26":9.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.86,"y25":9.17,"y26":9.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.43,"y25":9.0,"y26":9.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.14,"y25":8.83,"y26":9.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.14,"y25":7.0,"y26":7.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.86,"y25":9.33,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.43,"y25":9.17,"y26":10.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.71,"y25":8.17,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.71,"y25":9.67,"y26":10.0}],
+  "Obstetrics": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":6.4,"y25":6.0,"y26":7.13},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.0,"y25":5.86,"y26":7.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.2,"y25":7.0,"y26":7.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.2,"y25":6.86,"y26":8.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.2,"y25":7.43,"y26":8.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.2,"y25":5.14,"y26":5.75},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.4,"y25":9.0,"y26":9.13},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.6,"y25":8.71,"y26":8.38},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.0,"y25":8.29,"y26":8.88},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.0,"y25":9.14,"y26":9.0}],
+  "Occupational Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":5.4,"y25":6.2,"y26":7.5},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":6.4,"y25":7.2,"y26":8.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.4,"y25":8.2,"y26":8.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":6.4,"y25":8.0,"y26":9.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.6,"y25":8.2,"y26":9.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":4.6,"y25":6.8,"y26":6.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":7.4,"y25":9.4,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":7.8,"y25":9.4,"y26":9.5},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.0,"y25":8.2,"y26":9.5},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.4,"y25":8.4,"y26":9.5}],
+  "Oncology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.8,"y25":7.25,"y26":6.71},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.6,"y25":6.25,"y26":7.14},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.0,"y25":5.5,"y26":6.86},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.8,"y25":7.25,"y26":7.86},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.2,"y25":6.5,"y26":7.29},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.0,"y25":6.0,"y26":5.83},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.8,"y25":8.5,"y26":7.86},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.8,"y25":7.5,"y26":8.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.2,"y25":8.5,"y26":7.71},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.8,"y25":6.5,"y26":7.67}],
+  "Ophthalmology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.83,"y25":8.17,"y26":8.25},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.0,"y25":8.67,"y26":8.25},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.0,"y25":9.5,"y26":9.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.17,"y25":9.17,"y26":9.75},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.5,"y25":9.0,"y26":9.5},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":7.0,"y25":5.83,"y26":5.5},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.67,"y25":9.5,"y26":9.67},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.67,"y25":9.67,"y26":9.75},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.5,"y25":8.67,"y26":8.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":10.0,"y25":10.0,"y26":10.0}],
+  "Orthopaedic Surgery": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":6.25,"y25":7.38,"y26":7.9},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.0,"y25":7.38,"y26":7.5},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":5.75,"y25":7.63,"y26":8.2},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.5,"y25":9.0,"y26":8.7},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.75,"y25":8.75,"y26":8.6},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.5,"y25":7.0,"y26":6.4},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.0,"y25":9.38,"y26":8.9},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":7.0,"y25":9.0,"y26":8.6},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.0,"y25":7.38,"y26":7.5},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.75,"y25":9.75,"y26":9.4}],
+  "Pathology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.8,"y25":7.6,"y26":7.27},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.4,"y25":6.4,"y26":7.09},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.8,"y25":6.6,"y26":8.45},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.4,"y25":6.8,"y26":8.45},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":10.0,"y25":7.6,"y26":7.73},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":8.4,"y25":6.2,"y26":6.91},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.8,"y25":9.2,"y26":9.27},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":10.0,"y25":8.4,"y26":9.27},{"qid":"Q9","label":"Epic values my role on the board.","y24":10.0,"y25":8.4,"y26":9.09},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":10.0,"y25":8.2,"y26":9.27}],
+  "Pediatric Cardiology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":5.0,"y25":6.0,"y26":6.4},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":6.6,"y25":5.25,"y26":6.8},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.0,"y25":6.75,"y26":7.9},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.2,"y25":7.0,"y26":7.3},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.4,"y25":7.75,"y26":8.1},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.0,"y25":5.25,"y26":5.6},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.0,"y25":9.25,"y26":8.6},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.4,"y25":8.5,"y26":8.4},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.4,"y25":9.0,"y26":8.9},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.6,"y25":8.75,"y26":9.1}],
+  "Pediatric Emergency Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":9.25,"y25":8.86,"y26":10.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":9.25,"y25":8.57,"y26":10.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.25,"y25":9.14,"y26":10.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.25,"y25":9.14,"y26":10.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.25,"y25":9.14,"y26":10.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":9.0,"y25":7.29,"y26":10.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.5,"y25":9.57,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.5,"y25":9.0,"y26":10.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.75,"y25":8.57,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.5,"y25":9.57,"y26":10.0}],
+  "Pediatric Endocrinology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.4,"y25":6.4,"y26":7.33},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.2,"y25":7.4,"y26":7.67},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.2,"y25":8.4,"y26":8.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.2,"y25":8.0,"y26":8.33},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.6,"y25":8.0,"y26":8.5},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.2,"y25":6.4,"y26":6.5},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.0,"y25":9.0,"y26":8.83},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.0,"y25":7.4,"y26":8.5},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.2,"y25":8.6,"y26":8.83},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.8,"y25":8.4,"y26":8.83}],
+  "Pediatric Gastroenterology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":6.0,"y25":6.8,"y26":6.5},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":5.33,"y25":6.8,"y26":6.75},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":6.83,"y25":7.4,"y26":8.25},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":6.83,"y25":8.0,"y26":8.33},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.33,"y25":7.6,"y26":8.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.33,"y25":6.0,"y26":6.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.5,"y25":9.2,"y26":8.5},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":7.17,"y25":9.0,"y26":8.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.5,"y25":8.8,"y26":8.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.0,"y25":9.2,"y26":7.75}],
+  "Pediatric Hospital Medicine": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":null,"y25":null,"y26":6.5},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":null,"y25":null,"y26":8.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":null,"y25":null,"y26":8.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":null,"y25":null,"y26":8.5},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":null,"y25":null,"y26":8.75},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":null,"y25":null,"y26":5.75},{"qid":"Q7","label":"I enjoy participating on the board.","y24":null,"y25":null,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":null,"y25":null,"y26":9.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":null,"y25":null,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":null,"y25":null,"y26":10.0}],
+  "Pediatric Nephrology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.4,"y25":7.67,"y26":7.5},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.4,"y25":7.33,"y26":8.25},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.4,"y25":10.0,"y26":8.63},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.6,"y25":9.33,"y26":8.63},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.4,"y25":9.0,"y26":9.13},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.2,"y25":4.33,"y26":6.5},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.4,"y25":9.67,"y26":9.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.2,"y25":9.33,"y26":8.5},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.4,"y25":9.67,"y26":8.38},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.2,"y25":10.0,"y26":9.25}],
+  "Pediatric Neurology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":6.33,"y25":8.0,"y26":8.17},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":9.0,"y25":9.0,"y26":8.83},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.67,"y25":9.25,"y26":9.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.33,"y25":9.25,"y26":9.33},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.33,"y25":9.5,"y26":9.17},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.33,"y25":6.25,"y26":7.17},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.33,"y25":9.75,"y26":9.5},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.0,"y25":9.75,"y26":9.5},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.33,"y25":9.0,"y26":9.17},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.33,"y25":9.75,"y26":9.67}],
+  "Pediatric Oncology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.83,"y25":7.33,"y26":7.6},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.0,"y25":7.33,"y26":7.2},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.17,"y25":8.0,"y26":7.6},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.67,"y25":7.0,"y26":7.6},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.33,"y25":9.33,"y26":8.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.5,"y25":7.0,"y26":7.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.5,"y25":10.0,"y26":9.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.17,"y25":9.67,"y26":7.8},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.83,"y25":9.67,"y26":6.6},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.17,"y25":9.67,"y26":8.2}],
+  "Pediatric Otolaryngology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.4,"y25":6.33,"y26":7.5},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.6,"y25":6.83,"y26":8.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.2,"y25":6.5,"y26":9.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.8,"y25":6.5,"y26":8.5},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.4,"y25":6.67,"y26":8.5},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.6,"y25":5.0,"y26":7.5},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.0,"y25":7.17,"y26":8.5},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.4,"y25":6.83,"y26":9.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.4,"y25":6.33,"y26":9.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.0,"y25":7.0,"y26":9.5}],
+  "Pediatric Primary Care": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.75,"y25":7.67,"y26":7.86},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.75,"y25":8.17,"y26":9.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.25,"y25":8.17,"y26":9.14},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.0,"y25":8.0,"y26":9.29},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.0,"y25":8.5,"y26":9.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":8.25,"y25":7.0,"y26":8.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":10.0,"y25":8.67,"y26":9.43},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.5,"y25":8.83,"y26":9.29},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.5,"y25":8.83,"y26":9.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":10.0,"y25":9.67,"y26":9.14}],
+  "Pediatric Pulmonology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":9.0,"y25":8.0,"y26":7.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":9.0,"y25":8.0,"y26":7.17},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.0,"y25":8.0,"y26":7.33},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.0,"y25":8.0,"y26":7.17},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.0,"y25":8.0,"y26":7.33},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":8.33,"y25":7.5,"y26":6.5},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.67,"y25":8.5,"y26":7.33},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.33,"y25":8.0,"y26":6.83},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.33,"y25":8.5,"y26":7.5},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.0,"y25":8.5,"y26":7.5}],
+  "Pediatric Rheumatology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.0,"y25":6.83,"y26":7.67},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.67,"y25":6.83,"y26":7.67},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.0,"y25":8.33,"y26":9.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.67,"y25":8.33,"y26":9.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.67,"y25":8.0,"y26":8.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.33,"y25":6.5,"y26":8.67},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.0,"y25":8.83,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.67,"y25":8.33,"y26":10.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.0,"y25":8.33,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.67,"y25":9.17,"y26":10.0}],
+  "Pediatric Urology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.5,"y25":7.5,"y26":6.5},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.0,"y25":7.5,"y26":6.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.75,"y25":7.5,"y26":6.5},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.5,"y25":7.0,"y26":7.5},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.75,"y25":8.5,"y26":8.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.5,"y25":2.5,"y26":3.5},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.0,"y25":9.0,"y26":8.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.75,"y25":7.5,"y26":7.5},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.75,"y25":7.5,"y26":7.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.25,"y25":9.0,"y26":8.5}],
+  "Physical Medicine and Rehab": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":null,"y25":3.0,"y26":5.22},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":null,"y25":6.0,"y26":7.22},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":null,"y25":7.67,"y26":7.78},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":null,"y25":5.33,"y26":7.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":null,"y25":7.33,"y26":7.78},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":null,"y25":5.67,"y26":5.44},{"qid":"Q7","label":"I enjoy participating on the board.","y24":null,"y25":9.33,"y26":8.22},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":null,"y25":9.33,"y26":8.22},{"qid":"Q9","label":"Epic values my role on the board.","y24":null,"y25":9.33,"y26":8.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":null,"y25":9.33,"y26":8.0}],
+  "Pulmonology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":7.29,"y25":7.43,"y26":8.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":6.71,"y25":8.29,"y26":10.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":7.29,"y25":8.71,"y26":10.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.14,"y25":8.29,"y26":9.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":7.71,"y25":8.43,"y26":9.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":6.0,"y25":6.0,"y26":4.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.29,"y25":9.57,"y26":10.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":7.86,"y25":9.29,"y26":10.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":7.71,"y25":8.86,"y26":10.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":7.57,"y25":9.0,"y26":10.0}],
+  "Radiation Oncology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":5.43,"y25":7.6,"y26":6.73},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":7.57,"y25":8.4,"y26":7.36},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":8.43,"y25":8.6,"y26":9.45},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":8.29,"y25":8.0,"y26":9.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":8.29,"y25":8.2,"y26":9.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.86,"y25":7.2,"y26":6.36},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.14,"y25":9.4,"y26":9.36},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.0,"y25":9.0,"y26":9.09},{"qid":"Q9","label":"Epic values my role on the board.","y24":8.43,"y25":9.0,"y26":9.36},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":8.86,"y25":9.2,"y26":9.55}],
+  "Rehabilitation": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":8.0,"y25":7.0,"y26":6.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.38,"y25":8.38,"y26":7.6},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.25,"y25":9.0,"y26":6.8},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.88,"y25":9.0,"y26":8.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.13,"y25":9.13,"y26":7.8},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.75,"y25":5.5,"y26":5.8},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.88,"y25":9.88,"y26":9.6},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.38,"y25":9.25,"y26":9.4},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.5,"y25":9.38,"y26":8.6},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.38,"y25":9.75,"y26":8.4}],
+  "Rheumatology": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":6.5,"y25":7.83,"y26":7.27},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":8.0,"y25":8.83,"y26":7.82},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.0,"y25":9.17,"y26":9.09},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":9.0,"y25":9.33,"y26":9.09},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.0,"y25":9.0,"y26":9.36},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":7.75,"y25":7.17,"y26":7.73},{"qid":"Q7","label":"I enjoy participating on the board.","y24":9.25,"y25":9.83,"y26":9.18},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":9.0,"y25":9.17,"y26":9.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.25,"y25":9.67,"y26":8.36},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.5,"y25":10.0,"y26":9.45}],
+  "Trauma Surgery": [{"qid":"Q1","label":"Epic provides the necessary features, workflows, and content for my specialty.","y24":6.0,"y25":6.5,"y26":2.0},{"qid":"Q2","label":"The roadmap my Epic leads share reflects the most important priorities for my specialty.","y24":6.6,"y25":6.25,"y26":2.0},{"qid":"Q3","label":"The board has sufficient opportunity to provide feedback on my specialty's roadmap.","y24":9.2,"y25":8.0,"y26":6.0},{"qid":"Q4","label":"The board improves the quality of features, workflows, and content for users in my specialty.","y24":7.4,"y25":7.25,"y26":7.0},{"qid":"Q5","label":"The board has sufficient opportunity to provide feedback on specific features, workflow, and content projects for my specialty.","y24":9.2,"y25":7.25,"y26":7.0},{"qid":"Q6","label":"My organization is able to adopt the features, workflows, content, and recommendations the board has created in a timely manner.","y24":5.4,"y25":6.5,"y26":4.0},{"qid":"Q7","label":"I enjoy participating on the board.","y24":8.2,"y25":7.25,"y26":7.0},{"qid":"Q8","label":"The board effectively makes use of my time.","y24":8.4,"y25":5.75,"y26":5.0},{"qid":"Q9","label":"Epic values my role on the board.","y24":9.2,"y25":7.25,"y26":5.0},{"qid":"Q10","label":"Epic leads for the board support us well.","y24":9.2,"y25":7.0,"y26":5.0}]
+};
+
+const positiveQuotes = [
+  {s:"Behavioral Health",avg:10.0,q:"Working with the other steering board reps and the Epic team has been a remarkable and incredibly positive experience. I truly appreciate the thoughtfulness, intelligence, and diligence of everyone involved. Thank you so much for creating a space to do this work."},
+  {s:"Rheumatology",avg:10.0,q:"The steering board is the most informative meeting of my month. I have enjoyed the insights about where Epic is heading and the future of EMR in the age of AI and other advances."},
+  {s:"Radiation Oncology",avg:10.0,q:"The specialty board is amazing. The development that occurs from this board is second to none. I absolutely love participating and I hope to continue for a long time."},
+  {s:"Pediatric Emergency Medicine",avg:10.0,q:"The PEM Steering Board has been running well, with organized, efficient meetings and clear decision-making. Physician input is meaningfully incorporated early in Epic development, improving clinical relevance and specialty buy-in."},
+  {s:"Hospital Medicine",avg:10.0,q:"This past year felt more productive and worthwhile than the year before. I did appreciate feeling listened to after my feedback last year, and do appreciate the teams presenting to us and seeking our input throughout the year."},
+  {s:"Nephrology",avg:10.0,q:"The board has provided me with an incredible opportunity to grow. I was able to apply what I learned from the board to my organization and share what we do with the community as a whole. Epic leads the meeting very well and keeps all great minds on track."},
+  {s:"Hospital Medicine",avg:9.8,q:"This is some of the most enjoyable work that I do. Has been a great experience."},
+  {s:"Cardiology",avg:9.8,q:"I feel supported as a member of the board. I appreciate the opportunity to steer Epic in the right direction regarding my specialty. We are given sufficient opportunity to share our opinions, insight, and experiences with each other."},
+  {s:"Pediatric Primary Care",avg:9.8,q:"The Epic support of the board is outstanding. They have great general Epic knowledge and tailor it well to our work."},
+  {s:"Hospital Medicine",avg:9.7,q:"John, Dave, and their Epic team create an atmosphere for success and collegiality with the board. They advocate for the board and ensure employees who present to the board keep track of the impact of our feedback."},
+  {s:"Hospital Medicine",avg:9.7,q:"This has been a wonderful experience! Group moderation has been great, providing packed yet worthwhile agendas and stimulating great discussion. Not only do I feel like I have a voice on the board, but the board as a whole has a voice with Epic, guiding the way for our colleagues."},
+  {s:"Infectious Disease",avg:9.3,q:"I've been very impressed with the Epic team over the past year. We have seen consistent improvement with organization, communication, and project management. Kudos."},
+  {s:"Dermatology",avg:9.3,q:"I have seen topics discussed on the board translate into real world improvements both in patient care and physician quality of life. It is making a difference."},
+];
+
+const perfectBySpec = {"Rheumatology":3,"Pediatric Emergency Medicine":2,"Anesthesiology":1,"Behavioral Health":1,"Emergency Medicine":1,"Hospital Medicine":1,"Nephrology":1,"Pediatric Neurology":1,"Pediatric Primary Care":1,"Radiation Oncology":1};
+const perfectAvgsBySpec = {
+  "Emergency Medicine": ["Q1","Q2","Q3","Q4","Q5","Q6","Q7","Q8","Q9","Q10"],
+  "Pediatric Emergency Medicine": ["Q2","Q3","Q4","Q5","Q6","Q7","Q8","Q9","Q10"],
+  "General Surgery": ["Q2","Q3","Q4","Q5","Q7","Q8","Q9"],
+  "Hepatology": ["Q2","Q3","Q4","Q5","Q7","Q8","Q9","Q10"],
+  "Geriatric Medicine": ["Q3","Q5"],
+  "Pulmonology": ["Q2","Q3","Q5","Q7","Q8","Q9","Q10"],
+  "Neonatology": ["Q7","Q10"],
+  "Dentistry": ["Q7","Q8","Q9","Q10"],
+  "Neurology": ["Q7","Q8","Q9","Q10"],
+};
+
+/* ── NAVIGATION ──────────────────────────────────────────────────── */
+function nav(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'overview' && !ovInst) renderOverview();
+  if (id === 'questions' && !qInst) renderQChart();
+  if (id === 'summary') renderSummary();
+}
+
+/* ── OVERVIEW CHART ──────────────────────────────────────────────── */
+let ovInst = null;
+function renderOverview() {
+  const sk = document.getElementById('sortSel').value;
+  const mn = parseInt(document.getElementById('minN').value);
+  let data = pivoted.filter(d => d.n >= mn);
+  data.sort((a, b) => sk === 'n' ? a.n - b.n : a.a[+sk] - b.a[+sk]);
+  const labels = data.map(d => d.s.length > 30 ? d.s.slice(0, 28) + '…' : d.s);
+  const h = Math.max(460, labels.length * 22 + 80);
+  document.getElementById('ovWrap').style.height = h + 'px';
+  if (ovInst) ovInst.destroy();
+  ovInst = new Chart(document.getElementById('ovChart'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      {label:'Q1 features',data:data.map(d=>d.a[0]),backgroundColor:'#378ADD',borderRadius:2,barPercentage:0.65},
+      {label:'Q2 roadmap',data:data.map(d=>d.a[1]),backgroundColor:'#1D9E75',borderRadius:2,barPercentage:0.65},
+      {label:'Q6 adoption',data:data.map(d=>d.a[5]),backgroundColor:'#BA7517',borderRadius:2,barPercentage:0.65},
+      {label:'Q7 enjoyment',data:data.map(d=>d.a[6]),backgroundColor:'#E24B4A',borderRadius:2,barPercentage:0.65},
+      {label:'Q10 leads',data:data.map(d=>d.a[9]),backgroundColor:'#534AB7',borderRadius:2,barPercentage:0.65},
+    ]},
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.x.toFixed(1) } } },
+      scales: { x: { min: 0, max: 10, ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } }, y: { ticks: { font: { size: 11 } }, grid: { display: false } } }
+    }
+  });
+}
+
+/* ── QUESTION CHART ──────────────────────────────────────────────── */
+let qInst = null;
+function renderQChart() {
+  const qi = parseInt(document.getElementById('qSel').value);
+  let data = pivoted.filter(d => d.n >= 3).sort((a, b) => a.a[qi] - b.a[qi]);
+  const labels = data.map(d => d.s.length > 30 ? d.s.slice(0, 28) + '…' : d.s);
+  const h = Math.max(460, labels.length * 20 + 80);
+  document.getElementById('qWrap').style.height = h + 'px';
+  if (qInst) qInst.destroy();
+  qInst = new Chart(document.getElementById('qChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Score', data: data.map(d => d.a[qi]),
+      backgroundColor: data.map(d => d.a[qi] >= 8 ? '#1D9E75' : d.a[qi] >= 6 ? '#BA7517' : '#E24B4A'),
+      borderRadius: 2, barPercentage: 0.65 }]},
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.parsed.x.toFixed(1) + ' / 10' } } },
+      scales: { x: { min: 0, max: 10, ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } }, y: { ticks: { font: { size: 11 } }, grid: { display: false } } }
+    }
+  });
+}
+
+/* ── SUMMARY TABLE ───────────────────────────────────────────────── */
+function buildSumSelect() {
+  const sel = document.getElementById('sumSel');
+  Object.keys(summarySpecData).forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+}
+function renderSummary() {
+  const spec = document.getElementById('sumSel').value;
+  const qd = summarySpecData[spec];
+  const o24 = qd.reduce((a,b)=>a+b.y24,0)/qd.length;
+  const o25 = qd.reduce((a,b)=>a+b.y25,0)/qd.length;
+  const o26 = qd.reduce((a,b)=>a+b.y26,0)/qd.length;
+  const fd = v => { if(v==null) return '<td class="diff-fl">—</td>'; const n=Math.round(v*10)/10; const s=n>0?'+'+n.toFixed(1):n.toFixed(1); const cls=n>0.05?'diff-pos':n<-0.05?'diff-neg':'diff-fl'; return `<td class="${cls}">${s}</td>`; };
+  const fs = v => `<td class="score-c">${v!=null?v.toFixed(1):'—'}</td>`;
+  const rows = qd.map(q => `<tr><td>${q.label}</td>${fs(q.y24)}${fs(q.y25)}${fs(q.y26)}${fd(q.y26-q.y25)}${fd(q.y26-q.y24)}</tr>`).join('');
+  const or = `<tr class="overall-row"><td>Overall</td>${fs(o24)}${fs(o25)}${fs(o26)}${fd(o26-o25)}${fd(o26-o24)}</tr>`;
+  document.getElementById('sumWrap').innerHTML = `<table class="ssb-table"><thead><tr><th style="width:50%">Survey statement</th><th>2024</th><th>2025</th><th>2026</th><th>1Y diff '25→'26</th><th>2Y diff '24→'26</th></tr></thead><tbody>${rows}${or}</tbody></table>`;
+}
+
+/* ── TRENDS ──────────────────────────────────────────────────────── */
+function renderTrends() {
+  const q = (document.getElementById('trendQ').value || '').toLowerCase();
+  const filtered = trendRows.filter(d => d.s.toLowerCase().includes(q));
+  const fd = (v) => { if(v==null) return '<td>—</td>'; const n=Math.round(v*100)/100; const s=n>0?'+'+n.toFixed(2):n.toFixed(2); const cls=n>0.1?'chip-up':n<-0.1?'chip-dn':'chip-fl'; return `<td><span class="chip ${cls}">${s}</span></td>`; };
+  document.getElementById('trendBody').innerHTML = filtered.map(d => `<tr>
+    <td style="font-weight:500">${d.s}</td>
+    <td>${d.y24!=null?d.y24.toFixed(2):'—'}</td>
+    <td>${d.y25!=null?d.y25.toFixed(2):'—'}</td>
+    <td>${d.y26.toFixed(2)}</td>
+    ${fd(d.y25!=null?d.y26-d.y25:null)}
+    ${fd(d.y24!=null?d.y26-d.y24:null)}
+    <td style="color:var(--text-3)">${d.n}</td>
+  </tr>`).join('');
+}
+
+/* ── MOVERS ──────────────────────────────────────────────────────── */
+function buildMovers() {
+  const imp = [{s:"Endocrinology",y24:6.90,y26:8.20,diff:1.30,n:7},{s:"Hospital Medicine",y24:8.21,y26:9.38,diff:1.17,n:8},{s:"Orthopaedic Surgery",y24:7.05,y26:8.17,diff:1.12,n:10},{s:"Gynecology",y24:8.00,y26:8.89,diff:0.89,n:8},{s:"Infectious Disease",y24:6.26,y26:7.13,diff:0.87,n:3}];
+  const dec = [{s:"Pediatric Pulmonology",y24:9.07,y26:7.17,diff:-1.90,n:6},{s:"Bariatric Surgery and Obesity Medicine",y24:8.02,y26:6.56,diff:-1.46,n:8},{s:"Pathology",y24:9.46,y26:8.28,diff:-1.18,n:11},{s:"Oncology",y24:8.20,y26:7.31,diff:-0.89,n:7},{s:"Rehabilitation",y24:8.65,y26:7.80,diff:-0.85,n:5}];
+  document.getElementById('improvers').innerHTML = imp.map((d,i) => `<div class="mover-card"><div class="mover-rank">#${i+1} most improved</div><div class="mover-name">${d.s}</div><div class="mover-scores">${d.y24.toFixed(2)} → ${d.y26.toFixed(2)} (n=${d.n})</div><div class="mover-diff up">+${d.diff.toFixed(2)}</div></div>`).join('');
+  document.getElementById('decliners').innerHTML = dec.map((d,i) => `<div class="mover-card dn"><div class="mover-rank">#${i+1} largest decline</div><div class="mover-name">${d.s}</div><div class="mover-scores">${d.y24.toFixed(2)} → ${d.y26.toFixed(2)} (n=${d.n})</div><div class="mover-diff dn">${d.diff.toFixed(2)}</div></div>`).join('');
+}
+
+/* ── PERFECT ─────────────────────────────────────────────────────── */
+let perfInst = null;
+function buildPerfect() {
+  const labels = Object.keys(perfectBySpec);
+  const vals = Object.values(perfectBySpec);
+  const h = Math.max(180, labels.length * 28 + 60);
+  document.getElementById('perfWrap').style.height = h + 'px';
+  if (perfInst) perfInst.destroy();
+  perfInst = new Chart(document.getElementById('perfChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Perfect 10 respondents', data: vals, backgroundColor: '#BA7517', borderRadius: 3, barPercentage: 0.6 }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.x} respondent${c.parsed.x > 1 ? 's' : ''} with all 10s` } } },
+      scales: { x: { min: 0, max: 4, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } }, y: { ticks: { font: { size: 11 } }, grid: { display: false } } }
+    }
+  });
+  document.getElementById('perfectAvgs').innerHTML = Object.entries(perfectAvgsBySpec).map(([spec, qs]) => `<div class="perfect-row"><span class="perfect-spec">${spec}</span>${qs.map(q => `<span class="ten-chip">${q}</span>`).join('')}</div>`).join('');
+}
+
+/* ── HIGHLIGHTS ──────────────────────────────────────────────────── */
+function buildQuotes() {
+  document.getElementById('quotesGrid').innerHTML = positiveQuotes.map(q => `<div class="quote-card"><div class="quote-text">"${q.q}"</div><div class="quote-meta"><span class="quote-spec">${q.s}</span><span class="quote-score">${q.avg.toFixed(1)} avg</span></div></div>`).join('');
+}
+
+/* ── ALL SPECIALTIES ─────────────────────────────────────────────── */
+function renderSpecialties() {
+  const q = (document.getElementById('specQ').value || '').toLowerCase();
+  const filtered = pivoted.filter(d => d.n >= 3 && d.s.toLowerCase().includes(q));
+  document.getElementById('specGrid').innerHTML = filtered.sort((a,b)=>a.s.localeCompare(b.s)).map(d => {
+    const bars = d.a.map((v, i) => { const pct = (v/10*100).toFixed(0); const col = v>=8?'#1D9E75':v>=6?'#BA7517':'#E24B4A'; return `<div class="sbar-row"><span class="sbar-lbl">Q${i+1}</span><div class="sbar-bg"><div class="sbar-fill" style="width:${pct}%;background:${col}"></div></div><span class="sbar-val">${v.toFixed(1)}</span></div>`; }).join('');
+    return `<div class="spec-card"><div class="spec-name">${d.s} <span style="font-weight:400;color:var(--text-3)">(n=${d.n})</span></div>${bars}</div>`;
+  }).join('');
+}
+
+/* ── INIT ────────────────────────────────────────────────────────── */
+buildSumSelect();
+renderOverview();
+renderTrends();
+buildMovers();
+buildPerfect();
+buildQuotes();
+renderSpecialties();
+renderSummary();
+</script>
+
+<button onclick="printToPDF()" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:#C0544A;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 12px rgba(192,84,74,0.4);display:flex;align-items:center;gap:6px;" title="Export to PDF">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V5.5L9.5 1H4zm5 1.5L12.5 6H9V2.5z"/></svg>
+  Export PDF
+</button>
+<script>
+function printToPDF() {
+  window.print();
+}
+</script>
+</body>
+</html>
